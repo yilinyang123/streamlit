@@ -2,10 +2,14 @@ import streamlit as st
 import scanpy as sc
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def load_data():
 	adata = sc.read("thymic_APCs_processed_00.h5ad")
+	sc.pp.normalize_total(adata) #Normalize data by the median counts per single cell library
+	adata.X = np.arcsinh(adata.X).copy() #Transform the data by using an inverse hyperbolic sine transform, this eliminates the need for adding a pseudocount 
+	sc.pp.scale(adata) #Scale and center the data for interpretability
 	return adata
 adata = load_data()
 
