@@ -2,19 +2,26 @@ import streamlit as st
 import scanpy as sc
 import matplotlib.pyplot as plt
 import pandas as pd
-adata = sc.read("thymic_APCs_processed_00.h5ad")
+
+@st.cache(allow_output_mutation=True, show_spinner=False)
+def load_data():
+	adata = sc.read("thymic_APCs_processed_00.h5ad")
+	return adata
+adata = load_data()
+
 gene_list = list(adata.var_names)
 st.set_option('deprecation.showPyplotGlobalUse', False)
 st.title('thymic_APCs_processed_00')
 
-#user_input = st.text_input("gene", "Cd83")
 user_input = st.multiselect("gene",gene_list,['Cd83'])
-user_input = user_input[0]
+if len(user_input) >0:
+	user_input = user_input[0]
+else: user_input = 'Cd83'
 coord = adata.obsm['X_umap']
 cluster = pd.Categorical(adata.obs['leiden']).astype(int)
 a = adata[: , user_input].X.toarray().astype('float')
 
-@st.cache(allow_output_mutation=True)
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def get_fig():
 	fig,(ax1, ax2) = plt.subplots(1,2,figsize=(15,6))
 	ax1.scatter(coord[:, 0], coord[:, 1], c = cluster, cmap = 'tab20', s = 2,alpha=0.65)
@@ -27,5 +34,3 @@ def get_fig():
 	return fig
 
 st.pyplot(get_fig())
-#st.write(get_fig())
-#st.altair_chart(fig)
